@@ -1,68 +1,44 @@
-#include <stdarg.h>
-#include <unistd.h>
+#include "main.h"
 
 /**
- * _putchar - writes a character to stdout
- * @c: The character to print
+ * format_parser - produces output according to a format.
+ * @format: A string that contains the text to be written to stdout.
+ * @args: A list of arguments to replace the format specifiers.
  *
- * Return: On success 1.
- * On error, -1 is returned, and errno is set appropriately.
+ * Return: The number of characters printed (excluding the null byte used to
+ * end output to strings).
  */
-int _putchar(char c)
+int format_parser(const char *format, va_list args)
 {
-	return (write(1, &c, 1));
-}
+	int index = 0, count = 0;
+	print_func_t print_func[] = {
+		{'c', print_char},
+		{'s', print_string},
+		{'d', print_integer},
+		{'i', print_integer},
+		{'%', print_percent},
+		{'\0', NULL}
+	};
 
-/**
- * _printf - prints output according to a specified format
- * @format: pointer to string containing format specifiers
- *
- * Return: number of characters printed
- */
-int _printf(const char *format, ...)
-{
-	va_list args;
-	int i, count = 0;
-
-	va_start(args, format);
-
-	if (format == NULL)
-		return (-1);
-
-	for (i = 0; format[i] != '\0'; i++)
+	while (format != NULL && format[index] != '\0')
 	{
-		if (format[i] == '%')
+		if (format[index] == '%')
 		{
-			i++;
-			while (format[i] == ' ')
-				i++;
+			index++;
 
-			switch (format[i])
-			{
-				case 'c':
-					_putchar(va_arg(args, int));
-					count++;
-					break;
-				case 's':
-					count += write(1, va_arg(args, char *), sizeof(char *));
-					break;
-				case '%':
-					_putchar('%');
-					count++;
-					break;
-				default:
-					_putchar('%');
-					_putchar(format[i]);
-					count += 2;
-			}
+			if (format[index] == '\0')
+				return (-1);
+
+			count += specifier_handler(format[index], args, print_func);
+			index++;
 		}
 		else
 		{
-			_putchar(format[i]);
+			_putchar(format[index]);
 			count++;
+			index++;
 		}
 	}
 
-	va_end(args);
 	return (count);
 }
